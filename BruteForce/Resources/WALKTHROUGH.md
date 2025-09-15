@@ -1,5 +1,7 @@
-HtPasswd / Admin Panel
+Brute Force Attack
 =====================
+
+https://owasp.org/www-community/attacks/Brute_force_attack
 
 Like always, after messing around for a while with the landing page, it's time for some good old fashioned directory busting.
 
