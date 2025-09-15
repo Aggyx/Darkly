@@ -1,0 +1,14 @@
+Visited site at http://10.13.200.178/
+
+i can login at:
+http://10.13.200.178/?page=signin
+I can recover password at:
+http://10.13.200.178/?page=recover#
+Page seems with unconvential layout.
+When inspecting page i get to see a hidden input with mail.
+Submit returns a Invalid Form.
+I make the input mail visible with type=text and change the text to smagniny@student.42madrid.com
+Hit submmit and boom.
+The flag is:
+1D4855F7337C0C14B6F44946872C4EB33853F40B2D54393FBE94F49F1E19BBB0
+
