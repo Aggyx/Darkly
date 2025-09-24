@@ -1,0 +1,19 @@
+At http://192.168.1.144/?page=upload we can upload a file up to 100kb however not any file, jpg file
+From /Bruteforce folder we found /images/ endpoint using gobuster. 
+So what if can upload scripts and visit them to execute them ?
+
+tested: curl -v -X GET 'http://192.168.1.144/images/' \
+  -H 'User-Agent: ft_bornToSec' \   --> from http://192.168.1.144/?page=b7e44c7a40c5f80139f0a50f3650fb2bd8d00b0d24667c4c2ca32c88e13b758f inspecting html comments
+  -H 'Cookie: I_am_admin=a6105c0a611b41b08f1209506350279e' ---> From admin cookie breach
+
+output: 403 Forbidden
+
+:(
+    
+When inspecting networking endpoint when uploading we see a first POST then a GET
+POST    http://192.168.1.144/?page=upload
+GET     http://192.168.1.144/images/upload.png
+
+When requesting /images/upload.png we literaly get folder image.
+
+On the request Headers there is also a Etag value for cached results ?
