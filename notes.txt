@@ -1,9 +1,7 @@
 Next:
-    - .hidden dir scan 
-    - Brute Force Login 
     - Surveys
     - Feedback
-    - User-Agent ?
+    - User-Agent ft_bornToSec?
 
 
 
