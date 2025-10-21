@@ -17,3 +17,11 @@ GET     http://192.168.1.144/images/upload.png
 When requesting /images/upload.png we literaly get folder image.
 
 On the request Headers there is also a Etag value for cached results ?
+
+
+Found out that when clicking the nsa photo on homepage we get to http://ip/?page=media&src=nsa
+it shows the photo and filename: nsa_prism.jpg
+Tried to mess around src searchParam but still no clue. 
+It looks inside /images/ folder since the is in the url/images/nsa_prism.jpg
+
+We can upload to /tmp/
