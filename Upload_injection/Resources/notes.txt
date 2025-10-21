@@ -22,6 +22,6 @@ On the request Headers there is also a Etag value for cached results ?
 Found out that when clicking the nsa photo on homepage we get to http://ip/?page=media&src=nsa
 it shows the photo and filename: nsa_prism.jpg
 Tried to mess around src searchParam but still no clue. 
-It looks inside /images/ folder since the is in the url/images/nsa_prism.jpg
+It looks inside /images/ folder since there is indeed nsa_prism in the url/images/nsa_prism.jpg (responds w photo)
 
 We can upload to /tmp/
