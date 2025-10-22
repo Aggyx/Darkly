@@ -1,5 +1,5 @@
-Brute Force Attack
-=====================
+Directory Fuzzing
+=================
 
 https://owasp.org/www-community/attacks/Brute_force_attack
 
