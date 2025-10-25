@@ -1,1 +1,6 @@
 On http://192.168.56.104/?page=feedback there seems to be some sort of a form with 2 fields: `name` and `message`. i started typing typical stuff like commands and subshells like $(cat /etc/passwd) and i noticed that quotes and special characters get prefixed with a backslash. the flag appeared after introducing 2 consecutive special characters, like `\\` or `''` or `""` and i honestly have no clue why, i don't really understand the pattern or the attack.
+
+
+curl -s -X POST "http://darkly/?page=feedback" -d "txtName=a" -d "mtxtMessage=<script>Alert("Hola")</script>"
+
+Cross site scripting from textarea
