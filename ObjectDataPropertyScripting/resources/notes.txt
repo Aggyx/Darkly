@@ -1,0 +1,18 @@
+Al navegar en la página me da por hacer click en la imagen de NSA y me lleva a una nueva página.
+http:/darkly/page=media&src=nsa
+
+En ella vemos la imagen y el nombre del archivo.
+Pruebo de cambiar el src y empiezo a probar File inclusion que hace aparecer una página dentro de otra.
+Me digo que el src está indicado a un elemento html cual es el src de lo que tiene que renderizar.
+Pruebo varios tipos de src como file:, javascript: 
+
+Al inspeccionar la página observo que el elemento que renderiza es <Object>, utilizado antiguamente para renderizar plugins.
+este accepta un atributo "DATA" que toma una url. Por defecto recupera http://darkly/images/nsa_prism.png.
+
+Al leer sobre este campo, resulta que puedes cargar scripts a través del comportamiento "lazy loading" de data.
+el attr data carga recursos de una fuenta externa, también permite cargar archivos generados en base64. 
+Por lazy loading se refieren al hecho de usar otro attributo aparte src para cargar algo para futuro uso en un script en la pagina cliente.
+Sobreescribiendo el query data en la url por data=data:[Mime type];base64,encoded
+conseguimos renderizar nuestro contenido completando una inyeción de cross-site scripting.
+El elemento renderizado tiene que tener un tag <script> para que salte la flag.
+
